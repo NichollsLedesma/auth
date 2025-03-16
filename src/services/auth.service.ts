@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -55,20 +56,29 @@ export class AuthService {
     const refreshToken = await this.refreshTokenRepository.findOne({ user });
     if (!refreshToken) return await this.generateSession(user);
 
+    const now = new Date();
+    if (now.getTime() >= refreshToken.expiresIn) {
+      Logger.log(`update expired token to user ${user.publicUserId}`);
+      return await this.generateSession(user);
+    }
+
     return {
       accessToken: refreshToken.accessToken,
       refreshToken: refreshToken.refreshToken,
+      expiresDate: new Date(refreshToken.expiresIn),
     };
   }
   private async saveSession(sessionData: {
     accessToken: string;
     refreshToken: string;
+    expiresIn: number;
     user: UserDocument;
   }) {
     const refreshToken = await this.refreshTokenRepository.findOne({
       user: sessionData.user,
     });
     if (refreshToken) {
+      refreshToken.expiresIn = sessionData.expiresIn;
       refreshToken.accessToken = sessionData.accessToken;
       refreshToken.refreshToken = sessionData.refreshToken;
 
@@ -94,12 +104,16 @@ export class AuthService {
     };
     const accessToken = await this.authUtils.generateToken(payload);
     const refreshToken = GeneratorUtils.getUUID();
+    const now = new Date();
+    const expiresIn = now.getTime() + Number(this.authUtils.expiresIn);
+    Logger.log(`saving session for user ${user.publicUserId}`);
 
-    await this.saveSession({ accessToken, refreshToken, user });
+    await this.saveSession({ accessToken, refreshToken, expiresIn, user });
 
     return {
       accessToken,
       refreshToken,
+      expiresDate: new Date(expiresIn),
     };
   }
 }

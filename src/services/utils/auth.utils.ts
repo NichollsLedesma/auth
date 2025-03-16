@@ -11,6 +11,9 @@ export class AuthUtils {
     private readonly jwtConfigService: JWTConfigService,
   ) {}
 
+  public get expiresIn(): string {
+    return this.jwtConfigService.expiresIn;
+  }
   public async compare(password: string, hash: string) {
     try {
       const isMatch = await bcrypt.compare(password, hash);

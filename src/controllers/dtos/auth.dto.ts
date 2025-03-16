@@ -6,6 +6,7 @@ export class LoginDtoRequest {
 export class LoginDtoResponse {
   accessToken: string;
   refreshToken: string;
+  expiresDate: Date;
 }
 
 export class SingUpDtoRequest {

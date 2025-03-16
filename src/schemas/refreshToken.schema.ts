@@ -15,6 +15,8 @@ export class RefreshToken {
     ref: 'User',
   })
   user: User;
+  @Prop({ required: true })
+  expiresIn: number;
 }
 
 export const RefreshTokenSchema = SchemaFactory.createForClass(RefreshToken);
