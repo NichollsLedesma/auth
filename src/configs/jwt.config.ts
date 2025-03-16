@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService, registerAs } from '@nestjs/config';
 import { JwtModuleOptions, JwtOptionsFactory } from '@nestjs/jwt';
 
@@ -20,7 +20,9 @@ export class JWTConfigService implements JwtOptionsFactory {
   constructor(private readonly configService: ConfigService) {}
 
   public get secret(): string {
-    return this.configService.get<string>('JWT_SECRET') || '';
+    const jwtSecret = this.configService.get<string>('JWT_SECRET');
+    if (!jwtSecret) Logger.warn(`jwt secret is missing`);
+    return jwtSecret || '';
   }
   public get expiresIn(): string {
     const milliSeconds = 60 * 60 * 1000; // 1h

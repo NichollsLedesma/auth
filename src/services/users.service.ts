@@ -2,15 +2,17 @@ import { Injectable } from '@nestjs/common';
 import { UserDtoCreate, UserDtoResponse } from 'src/controllers/dtos/users.dto';
 import { UserRepository } from 'src/repositories';
 import { UserDocument } from 'src/schemas/user.schema';
-import { v4 as uuidv4 } from 'uuid';
 import { findUserBy } from './types/users.type';
+import { GeneratorUtils } from './utils/generator.utils';
 
 @Injectable()
 export class UsersService {
   constructor(private readonly userRepository: UserRepository) {}
   public async create(userDto: UserDtoCreate): Promise<UserDtoResponse> {
-    const publicUserId = uuidv4();
-    const user = await this.userRepository.create({ ...userDto, publicUserId });
+    const user = await this.userRepository.create({
+      ...userDto,
+      publicUserId: GeneratorUtils.getUUID(),
+    });
 
     return {
       id: user.publicUserId,

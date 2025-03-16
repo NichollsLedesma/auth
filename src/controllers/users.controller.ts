@@ -9,6 +9,7 @@ export class UsersController {
 
   @Get()
   async fetchAll() {
+    // TODO: add filters and paginated
     return await this.usersService.getAll();
   }
 }

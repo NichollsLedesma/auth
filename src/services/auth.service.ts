@@ -12,9 +12,10 @@ import {
 } from 'src/controllers/dtos/auth.dto';
 import { RefreshTokenRepository } from 'src/repositories';
 import { UserDocument } from 'src/schemas/user.schema';
-import { v4 as uuidv4 } from 'uuid';
+
 import { UsersService } from './users.service';
 import { AuthUtils } from './utils/auth.utils';
+import { GeneratorUtils } from './utils/generator.utils';
 
 @Injectable()
 export class AuthService {
@@ -92,7 +93,7 @@ export class AuthService {
       id: user.publicUserId,
     };
     const accessToken = await this.authUtils.generateToken(payload);
-    const refreshToken = uuidv4();
+    const refreshToken = GeneratorUtils.getUUID();
 
     await this.saveSession({ accessToken, refreshToken, user });
 
