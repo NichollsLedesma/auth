@@ -1,52 +1,66 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
-  BadRequestException,
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { PermissionDto } from 'src/controllers/dtos/role.dto';
+import { PERMISSIONS_KEY } from 'src/decorators/permission.decorator';
+import { Action } from 'src/schemas/enums/action.enum';
 import { UsersService } from 'src/services/users.service';
 import { AuthUtils } from 'src/services/utils/auth.utils';
 
+type RequestWithUser = Request & {
+  userId?: string;
+};
+
 @Injectable()
-export class AuthGuard implements CanActivate {
+export class AuthorizationGuard implements CanActivate {
   constructor(
+    private readonly reflector: Reflector,
     private readonly userService: UsersService,
     private readonly authUtils: AuthUtils,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request: Request = context.switchToHttp().getRequest();
+    const request: RequestWithUser = context.switchToHttp().getRequest();
 
-    const token = this.extractTokenFromHeader(request);
-    if (!token) {
-      throw new UnauthorizedException(`token is required`);
-    }
+    if (!request.userId) throw new UnauthorizedException(`token is required.`);
 
-    try {
-      const payload = await this.authUtils.extractDataFromToken(token);
-      const user = await this.userService.getUserBy({
-        publicUserId: payload.id,
-      });
+    const routePermissions: PermissionDto[] = this.reflector.getAllAndOverride(
+      PERMISSIONS_KEY,
+      [context.getHandler(), context.getClass()],
+    );
 
-      if (!user) throw new UnauthorizedException(`Invalid user`);
+    // if the route no requires permissions, return true
+    if (routePermissions.length === 0) return true;
 
-      request['user'] = payload;
-    } catch (err) {
-      const error = err as Error;
-      if (error.message.includes('jwt malformed'))
-        throw new BadRequestException('Invalid token');
-      throw new UnauthorizedException(error.message);
+    const userPermissions = await this.userService.getUserPermissions(
+      request.userId,
+    );
+
+    if (userPermissions.length === 0) throw new ForbiddenException();
+
+    for (const rousePermission of routePermissions) {
+      const userPermission: PermissionDto = userPermissions.find(
+        (userPermission: PermissionDto) =>
+          userPermission.resource === rousePermission.resource,
+      );
+
+      if (!userPermission) throw new ForbiddenException();
+      const hasPermission = rousePermission.actions.every(
+        (requiredAction: Action) =>
+          userPermission.actions.includes(requiredAction),
+      );
+
+      if (!hasPermission)
+        throw new ForbiddenException(
+          `You don't have permission to access this resource`,
+        );
     }
     return true;
-  }
-
-  private extractTokenFromHeader(request: Request): string | undefined {
-    const authorizationHeader: string = request.headers['authorization'];
-    if (!authorizationHeader) return undefined;
-
-    const [type, token] = authorizationHeader.split(' ');
-    return type === 'Bearer' ? token : undefined;
   }
 }

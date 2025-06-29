@@ -5,8 +5,9 @@ import configuration from './configs/configuration';
 import databaseConfig from './configs/database.config';
 import jwtConfig from './configs/jwt.config';
 import { AuthModule } from './modules/auth.module';
+import { RepositoriesModule } from './modules/global/repository.module';
+import { RoleModule } from './modules/role.module';
 import { UsersModule } from './modules/users.module';
-import { RepositoriesModule } from './repositories/repository.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { RepositoriesModule } from './repositories/repository.module';
     RepositoriesModule,
     AuthModule,
     UsersModule,
+    RoleModule,
   ],
   controllers: [],
   providers: [],

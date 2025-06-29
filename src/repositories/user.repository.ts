@@ -12,8 +12,8 @@ export class UserRepository {
     return user;
   }
 
-  public async findOne(filter: Partial<User>) {
-    return await this.userModel.findOne(filter);
+  public async findOne(filter: Partial<User>, populate: string[]) {
+    return await this.userModel.findOne(filter).populate(populate);
   }
   public async findAll(filter = {}) {
     return await this.userModel.find(filter);

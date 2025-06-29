@@ -1,4 +1,6 @@
 import * as Joi from 'joi';
+import { Action } from 'src/schemas/enums/action.enum';
+import { Resource } from 'src/schemas/enums/resource.enum';
 
 const joiPassword = Joi.string()
   .min(6)
@@ -16,4 +18,20 @@ export const signUpSchema = Joi.object({
 
 export const refreshTokenSchema = Joi.object({
   refreshToken: Joi.string().uuid().required(),
+});
+
+export const createRoleSchema = Joi.object({
+  name: Joi.string().min(3).required(),
+  permissions: Joi.array()
+    .items(
+      Joi.object({
+        resource: Joi.string()
+          .valid(...Object.values(Resource))
+          .required(),
+        actions: Joi.array()
+          .items(Joi.string().valid(...Object.values(Action)))
+          .required(),
+      }),
+    )
+    .required(),
 });
