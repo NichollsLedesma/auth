@@ -12,11 +12,11 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Permissions([
-    { resource: Resource.users, actions: [Action.create, Action.read] },
-    { resource: Resource.settings, actions: [Action.read] },
+    { resource: Resource.users, actions: [Action.read] },
+    { resource: Resource.roles, actions: [Action.read] },
   ])
   @Get()
-  async fetchAll() {
+  public async fetchAll() {
     // TODO: add filters and paginated
     return await this.usersService.getAll();
   }

@@ -1,15 +1,23 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { UserDtoCreate, UserDtoResponse } from 'src/controllers/dtos/users.dto';
+import { CreateUserDto, ResponseUserDto } from 'src/controllers/dtos/users.dto';
 import { UserRepository } from 'src/repositories';
-import { Permission } from 'src/schemas/permission.schema';
 import { Role } from 'src/schemas/role.schema';
-import { findUserBy } from './types/users.type';
+import { User } from 'src/schemas/user.schema';
+import { Permission } from './types/auth.type';
 import { GeneratorUtils } from './utils/generator.utils';
 
 @Injectable()
 export class UsersService {
   constructor(private readonly userRepository: UserRepository) {}
-  public async create(userDto: UserDtoCreate): Promise<UserDtoResponse> {
+
+  private mapUserToResponse(user: User): ResponseUserDto {
+    return {
+      id: user.publicUserId,
+      email: user.email,
+      username: user.username,
+    };
+  }
+  public async create(userDto: CreateUserDto): Promise<ResponseUserDto> {
     const user = await this.userRepository.create({
       ...userDto,
       publicUserId: GeneratorUtils.getUUID(),
@@ -22,7 +30,7 @@ export class UsersService {
     };
   }
 
-  public async getUserPermissions(publicUserId: string): Promise<any[]> {
+  public async getUserPermissions(publicUserId: string): Promise<Permission[]> {
     const user = await this.getUserBy({ publicUserId }, ['role']);
     if (!user) throw new NotFoundException('User not found');
 
@@ -36,13 +44,13 @@ export class UsersService {
     }));
   }
 
-  public async getUserBy(filter: findUserBy, populate: string[] = []) {
+  public async getUserBy(filter: Partial<User>, populate: string[] = []) {
     return (await this.userRepository.findOne(filter, populate)) || null;
   }
 
   public async getAll() {
-    const users = this.userRepository.findAll();
+    const users = await this.userRepository.findAll();
 
-    return users;
+    return users.map((user) => this.mapUserToResponse(user));
   }
 }

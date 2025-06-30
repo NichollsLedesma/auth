@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   CanActivate,
   ExecutionContext,
@@ -7,13 +6,12 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { PermissionDto } from 'src/controllers/dtos/role.dto';
 import { PERMISSIONS_KEY } from 'src/decorators/permission.decorator';
 import { Action } from 'src/schemas/enums/action.enum';
+import { Permission } from 'src/schemas/permission.schema';
 import { UsersService } from 'src/services/users.service';
-import { AuthUtils } from 'src/services/utils/auth.utils';
 
-type RequestWithUser = Request & {
+export type RequestWithUser = Request & {
   userId?: string;
 };
 
@@ -22,7 +20,6 @@ export class AuthorizationGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly userService: UsersService,
-    private readonly authUtils: AuthUtils,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -30,7 +27,7 @@ export class AuthorizationGuard implements CanActivate {
 
     if (!request.userId) throw new UnauthorizedException(`token is required.`);
 
-    const routePermissions: PermissionDto[] = this.reflector.getAllAndOverride(
+    const routePermissions: Permission[] = this.reflector.getAllAndOverride(
       PERMISSIONS_KEY,
       [context.getHandler(), context.getClass()],
     );
@@ -45,8 +42,8 @@ export class AuthorizationGuard implements CanActivate {
     if (userPermissions.length === 0) throw new ForbiddenException();
 
     for (const rousePermission of routePermissions) {
-      const userPermission: PermissionDto = userPermissions.find(
-        (userPermission: PermissionDto) =>
+      const userPermission: Permission | undefined = userPermissions.find(
+        (userPermission: Permission) =>
           userPermission.resource === rousePermission.resource,
       );
 

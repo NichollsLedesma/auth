@@ -1,15 +1,15 @@
-export class LoginDtoRequest {
+export class LoginDto {
   email: string;
   password: string;
 }
 
-export class LoginDtoResponse {
+export class ResponseLoginDto {
   accessToken: string;
   refreshToken: string;
   expiresDate: Date;
 }
 
-export class SingUpDtoRequest {
+export class SingUpDto {
   username: string;
   email: string;
   password: string;

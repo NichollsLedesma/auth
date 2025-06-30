@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { RoleDtoCreate } from 'src/controllers/dtos/role.dto';
+import { RoleDto } from 'src/controllers/dtos/role.dto';
 import { RoleRepository } from 'src/repositories/role.repository';
 import { Role } from 'src/schemas/role.schema';
 
@@ -21,7 +21,7 @@ export class RoleService {
     return roles.map((role: Role) => this.mapRoleToDto(role));
   }
 
-  public async createRole(role: RoleDtoCreate) {
+  public async createRole(role: RoleDto) {
     const { name } = role;
     const roleExists = await this.roleRepository.findOne({ name });
     if (roleExists)

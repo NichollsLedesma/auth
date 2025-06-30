@@ -2,11 +2,15 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
+import { AuthenticationGuard } from 'src/guards/authentication.guard';
+import { RequestWithUser } from 'src/guards/authorization.guard';
 import { RefreshTokenGuard } from 'src/guards/refreshToken.guard';
 import {
   refreshTokenSchema,
@@ -14,23 +18,23 @@ import {
   signUpSchema,
 } from 'src/middlewares/joiSchemas';
 import { AuthService } from 'src/services/auth.service';
-import { LoginDtoRequest, SingUpDtoRequest } from './dtos/auth.dto';
+import { LoginDto, SingUpDto } from './dtos/auth.dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('singup')
+  @Post('sing-up')
   @HttpCode(HttpStatus.CREATED)
-  async singUp(@Body() singUpDto: SingUpDtoRequest) {
+  async singUp(@Body() singUpDto: SingUpDto) {
     const { error } = signUpSchema.validate(singUpDto);
     if (error) throw new BadRequestException(error.message);
 
     return this.authService.singUp(singUpDto);
   }
 
-  @Post('singin')
-  async login(@Body() loginDto: LoginDtoRequest) {
+  @Post('sing-in')
+  async login(@Body() loginDto: LoginDto) {
     const { error } = signInSchema.validate(loginDto);
     if (error) throw new BadRequestException(error.message);
 
@@ -45,5 +49,12 @@ export class AuthController {
     if (error) throw new BadRequestException(error.message);
 
     return this.authService.refreshToken(data.refreshToken);
+  }
+
+  @Get('me')
+  @UseGuards(AuthenticationGuard)
+  public async me(@Req() req: RequestWithUser) {
+    const user = await this.authService.me(req.userId as string);
+    return user;
   }
 }

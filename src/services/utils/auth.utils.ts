@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { JWTConfigService } from 'src/configs/jwt.config';
-import { payloadToken } from '../types/auth.type';
+import { PayloadToken } from '../types/auth.type';
 
 @Injectable()
 export class AuthUtils {
@@ -29,7 +29,7 @@ export class AuthUtils {
 
     return hash;
   }
-  public async generateToken(payload: payloadToken) {
+  public async generateToken(payload: PayloadToken) {
     const token = await this.jwtService.signAsync(payload, {
       secret: this.jwtConfigService.secret,
       expiresIn: this.jwtConfigService.expiresIn,
@@ -39,7 +39,7 @@ export class AuthUtils {
   }
 
   public async extractDataFromToken(token: string) {
-    const payload: payloadToken = await this.jwtService.verifyAsync(token, {
+    const payload: PayloadToken = await this.jwtService.verifyAsync(token, {
       secret: this.jwtConfigService.secret,
     });
     return payload;

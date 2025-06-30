@@ -5,7 +5,7 @@ export class PermissionDto {
   resource: Resource;
   actions: Action[];
 }
-export class RoleDtoCreate {
+export class RoleDto {
   name: string;
   permissions: PermissionDto[];
 }

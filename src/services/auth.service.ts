@@ -7,13 +7,15 @@ import {
 } from '@nestjs/common';
 
 import {
-  LoginDtoRequest,
-  LoginDtoResponse,
-  SingUpDtoRequest,
+  LoginDto,
+  ResponseLoginDto,
+  SingUpDto,
 } from 'src/controllers/dtos/auth.dto';
 import { RefreshTokenRepository } from 'src/repositories';
 import { UserDocument } from 'src/schemas/user.schema';
 
+import { Role } from 'src/schemas/role.schema';
+import { SessionData } from './types/auth.type';
 import { UsersService } from './users.service';
 import { AuthUtils } from './utils/auth.utils';
 import { GeneratorUtils } from './utils/generator.utils';
@@ -25,7 +27,7 @@ export class AuthService {
     private readonly refreshTokenRepository: RefreshTokenRepository,
     private readonly authUtils: AuthUtils,
   ) {}
-  public async singUp(singUpDto: SingUpDtoRequest) {
+  public async singUp(singUpDto: SingUpDto) {
     const { email, username, password } = singUpDto;
     const cleanedEmail = email.toLowerCase();
     const cleanedUserName = username.toLowerCase();
@@ -45,7 +47,7 @@ export class AuthService {
     return newUser;
   }
 
-  public async singIn(loginDto: LoginDtoRequest): Promise<LoginDtoResponse> {
+  public async singIn(loginDto: LoginDto): Promise<ResponseLoginDto> {
     const { email, password } = loginDto;
     const user = await this.userService.getUserBy({ email });
     if (!user) throw new NotFoundException(`user ${email} not found.`);
@@ -68,12 +70,7 @@ export class AuthService {
       expiresDate: new Date(refreshToken.expiresIn),
     };
   }
-  private async saveSession(sessionData: {
-    accessToken: string;
-    refreshToken: string;
-    expiresIn: number;
-    user: UserDocument;
-  }) {
+  private async saveSession(sessionData: SessionData) {
     const refreshToken = await this.refreshTokenRepository.findOne({
       user: sessionData.user,
     });
@@ -114,6 +111,31 @@ export class AuthService {
       accessToken,
       refreshToken,
       expiresDate: new Date(expiresIn),
+    };
+  }
+
+  public async me(publicUserId: string) {
+    const user = await this.userService.getUserBy({ publicUserId }, ['role']);
+    if (!user) throw new NotFoundException(`user not found.`);
+
+    const userData = {
+      id: user.publicUserId,
+      email: user.email,
+      username: user.username,
+    };
+    if (!user.role) return userData;
+
+    const role = user.role as unknown as Role;
+
+    return {
+      ...userData,
+      role: {
+        name: role.name,
+        permissions: role.permissions.map((permission) => ({
+          resource: permission.resource,
+          actions: permission.actions,
+        })),
+      },
     };
   }
 }

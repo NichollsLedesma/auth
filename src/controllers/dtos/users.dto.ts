@@ -1,11 +1,11 @@
-export class UserDtoCreate {
+export class CreateUserDto {
   email: string;
   username: string;
   password: string;
   publicUserId?: string;
 }
 
-export class UserDtoResponse {
+export class ResponseUserDto {
   id: string;
   email: string;
   username: string;

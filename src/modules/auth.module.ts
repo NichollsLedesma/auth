@@ -17,5 +17,6 @@ import { RepositoriesModule } from './global/repository.module';
     RepositoriesModule,
     UsersModule,
   ],
+  exports: [AuthService, AuthUtils],
 })
 export class AuthModule {}
