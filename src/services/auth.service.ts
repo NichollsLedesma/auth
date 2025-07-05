@@ -22,6 +22,8 @@ import { GeneratorUtils } from './utils/generator.utils';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly userService: UsersService,
     private readonly refreshTokenRepository: RefreshTokenRepository,
@@ -29,6 +31,7 @@ export class AuthService {
   ) {}
   public async singUp(singUpDto: SingUpDto) {
     const { email, username, password } = singUpDto;
+    this.logger.log(`sing up user: ${JSON.stringify({ email, username })}`);
     const cleanedEmail = email.toLowerCase();
     const cleanedUserName = username.toLowerCase();
     let user = await this.userService.getUserBy({ email: cleanedEmail });
@@ -49,6 +52,7 @@ export class AuthService {
 
   public async singIn(loginDto: LoginDto): Promise<ResponseLoginDto> {
     const { email, password } = loginDto;
+    this.logger.log(`sing in user: ${JSON.stringify({ email })}`);
     const user = await this.userService.getUserBy({ email });
     if (!user) throw new NotFoundException(`user ${email} not found.`);
 
@@ -60,7 +64,7 @@ export class AuthService {
 
     const now = new Date();
     if (now.getTime() >= refreshToken.expiresIn) {
-      Logger.log(`update expired token to user ${user.publicUserId}`);
+      this.logger.log(`update expired token to user ${user.publicUserId}`);
       return await this.generateSession(user);
     }
 
@@ -84,6 +88,7 @@ export class AuthService {
   }
 
   public async refreshToken(refreshToken: string) {
+    this.logger.log(`refreshing token`);
     const refreshTokenFounded = await this.refreshTokenRepository.findOne({
       refreshToken,
     });
@@ -103,7 +108,7 @@ export class AuthService {
     const refreshToken = GeneratorUtils.getUUID();
     const now = new Date();
     const expiresIn = now.getTime() + Number(this.authUtils.expiresIn);
-    Logger.log(`saving session for user ${user.publicUserId}`);
+    this.logger.log(`saving session for user ${user.publicUserId}`);
 
     await this.saveSession({ accessToken, refreshToken, expiresIn, user });
 

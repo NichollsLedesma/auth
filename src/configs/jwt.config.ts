@@ -9,19 +9,19 @@ export default registerAs('jwt', () => ({
 
 @Injectable()
 export class JWTConfigService implements JwtOptionsFactory {
+  private readonly logger = new Logger(JWTConfigService.name);
   createJwtOptions(): JwtModuleOptions {
     const jwtOptions = {
       secret: this.secret,
       signOptions: { expiresIn: this.expiresIn },
     };
-    // Logger.log({ jwtOptions });
     return jwtOptions;
   }
   constructor(private readonly configService: ConfigService) {}
 
   public get secret(): string {
     const jwtSecret = this.configService.get<string>('JWT_SECRET');
-    if (!jwtSecret) Logger.warn(`jwt secret is missing`);
+    if (!jwtSecret) this.logger.warn(`jwt secret is missing`);
     return jwtSecret || '';
   }
   public get expiresIn(): string {

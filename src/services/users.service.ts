@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CreateUserDto, ResponseUserDto } from 'src/controllers/dtos/users.dto';
 import { UserRepository } from 'src/repositories';
 import { Role } from 'src/schemas/role.schema';
@@ -8,6 +8,8 @@ import { GeneratorUtils } from './utils/generator.utils';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(private readonly userRepository: UserRepository) {}
 
   private mapUserToResponse(user: User): ResponseUserDto {
@@ -49,6 +51,7 @@ export class UsersService {
   }
 
   public async getAll() {
+    this.logger.log('getting all users');
     const users = await this.userRepository.findAll();
 
     return users.map((user) => this.mapUserToResponse(user));
